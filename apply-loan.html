@@ -197,6 +197,16 @@
       alert("🎉 Loan application submitted successfully!");
       window.location.href = "dashboard.html";
     }
+
+    const kyc = (JSON.parse(localStorage.getItem("kycData")) || []).find(k => k.email === loggedInUser?.email);
+    const profile = JSON.parse(localStorage.getItem("profileData")) || {};
+
+    if (!loggedInUser || !kyc || !profile.email) {
+      alert("❗ Please complete your KYC and Profile before applying for a loan.");
+      return;
+    }
+
   </script>
 </body>
+
 </html>

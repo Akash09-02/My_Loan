@@ -212,6 +212,32 @@
     }
 
     window.onload = loadExistingKYC;
+
+    function saveKYCForm() {
+      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (!loggedInUser || !loggedInUser.email) return alert("Please login first");
+
+      const kycData = JSON.parse(localStorage.getItem("kycData")) || [];
+      const kyc = {
+        email: loggedInUser.email,
+        fullname: document.getElementById("fullname").value,
+        dob: document.getElementById("dob").value,
+        aadhar: document.getElementById("aadhar").value,
+        pan: document.getElementById("pan").value,
+        income: document.getElementById("income").value,
+      };
+
+      const existingIndex = kycData.findIndex(k => k.email === kyc.email);
+      if (existingIndex >= 0) {
+        kycData[existingIndex] = kyc;
+      } else {
+        kycData.push(kyc);
+      }
+
+      localStorage.setItem("kycData", JSON.stringify(kycData));
+      alert("✅ KYC saved successfully.");
+    }
+
   </script>
 </body>
 
