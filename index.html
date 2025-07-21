@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Email OTP Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(to right, #a1c4fd, #c2e9fb);
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    input:focus {
+      border-color: #7e57c2;
+      outline: none;
+      box-shadow: 0 0 8px rgba(126, 87, 194, 0.5);
+    }
+
+    button {
+      background-color: #7e57c2;
+      color: white;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #5e35b1;
+    }
+
+    #otpSection {
+      display: none;
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status {
+      margin-top: 10px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔐 Login with Email OTP</h2>
+    <form id="otpForm">
+      <input type="email" id="email" placeholder="Enter your Email" required />
+      <button type="button" onclick="sendOTP()">Send OTP</button>
+
+      <div id="otpSection">
+        <input type="text" id="enteredOTP" placeholder="Enter OTP" maxlength="6" />
+        <button type="button" onclick="verifyOTP()">Verify OTP</button>
+      </div>
+    </form>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    // ✅ Init EmailJS with public key
+    emailjs.init("07vJmR6dq9c-yYlr5");
+
+    let generatedOTP = "";
+
+    function sendOTP() {
+      const email = document.getElementById("email").value;
+      if (!email || !email.includes("@")) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      // ✅ Generate OTP
+      generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // ✅ Get OTP expiry time
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 15); // valid for 15 mins
+      const expiryTime = now.toLocaleTimeString();
+
+      // ✅ Template variables
+      const templateParams = {
+        email: email,
+        passcode: generatedOTP,
+        time: expiryTime
+      };
+
+      // ✅ Send OTP to user
+      emailjs.send("service_8kmu2t8", "template_bc2z42b", templateParams)
+        .then(() => {
+          document.getElementById("otpSection").style.display = "block";
+          document.getElementById("status").innerText = "✅ OTP sent to " + email;
+        })
+        .catch((error) => {
+          console.error("Error sending OTP:", error);
+          alert("❌ Failed to send OTP.");
+        });
+    }
+
+    function verifyOTP() {
+      const entered = document.getElementById("enteredOTP").value;
+      if (entered === generatedOTP) {
+        alert("🎉 OTP Verified. Login Successful!");
+        window.location.href = "login.html"; // redirect if needed
+      } else {
+        alert("❌ Incorrect OTP. Please try again.");
+      }
+    }
+  </script>
+</body>
+</html>
