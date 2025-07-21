@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Akash Loan App - Profile</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #dfefff, #f3f8ff);
+      padding: 30px 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      animation: fadeIn 0.7s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 20px;
+    }
+
+    form {
+      background: #ffffff;
+      padding: 25px 30px;
+      border-radius: 20px;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+      animation: fadeIn 0.9s ease;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #bbb;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus,
+    textarea:focus {
+      border-color: #007bff;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    input[type="file"] {
+      margin-top: 8px;
+    }
+
+    img {
+      max-width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-top: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    img:hover {
+      transform: scale(1.05);
+    }
+
+    button {
+      width: 100%;
+      background: linear-gradient(to right, #004e92, #000428);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      margin-top: 25px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #003060, #001830);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 500px) {
+      form {
+        padding: 20px;
+      }
+
+      button {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <form id="profileForm">
+    <h2>👤 Your Profile</h2>
+
+    <label for="name">Full Name:</label>
+    <input type="text" id="name" required />
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" required />
+
+    <label for="phone">Phone:</label>
+    <input type="tel" id="phone" required />
+
+    <label for="address">Address:</label>
+    <textarea id="address" rows="3" required></textarea>
+
+    <label for="imageUpload">Upload Profile Image:</label>
+    <input type="file" id="imageUpload" accept="image/*" />
+    <img id="profilePic" src="" alt="Profile Image" />
+
+    <button type="submit">💾 Save Profile</button>
+  </form>
+
+ <script>
+  // Load saved data
+  window.onload = function () {
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (loggedInUser) {
+      document.getElementById("name").value = loggedInUser.name || "";
+      document.getElementById("email").value = loggedInUser.email || "";
+      document.getElementById("phone").value = loggedInUser.phone || "";
+      document.getElementById("address").value = loggedInUser.address || "";
+      document.getElementById("profilePic").src = loggedInUser.image || "";
+    }
+  };
+
+  // Save profile data
+  document.getElementById("profileForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const phone = document.getElementById("phone").value;
+    const address = document.getElementById("address").value;
+    const image = document.getElementById("profilePic").src;
+
+    const profileData = { name, email, phone, address, image };
+
+    // ✅ Save/update in `users` list
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    const userIndex = users.findIndex(user => user.email === email);
+    if (userIndex !== -1) {
+      users[userIndex] = profileData; // update existing user
+    } else {
+      users.push(profileData); // new user
+    }
+    localStorage.setItem("users", JSON.stringify(users));
+
+    // ✅ Set as current logged in user
+    localStorage.setItem("loggedInUser", JSON.stringify(profileData));
+
+    alert("✅ प्रोफाईल यशस्वीरित्या सेव्ह झाला!");
+  });
+
+  // Handle image preview
+  document.getElementById("imageUpload").addEventListener("change", function () {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      document.getElementById("profilePic").src = e.target.result;
+    };
+    reader.readAsDataURL(this.files[0]);
+  });
+</script>
+
+</body>
+</html>

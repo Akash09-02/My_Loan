@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="mr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💸 Akash Loan App - वापरकर्ता डॅशबोर्ड</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to right, #f0f4ff, #dbe9ff);
+      padding: 1rem;
+      min-height: 100vh;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    header {
+      background: linear-gradient(120deg, #004e92, #000428);
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+      border-radius: 20px;
+      position: relative;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      animation: slideDown 1s ease-out;
+    }
+
+    @keyframes slideDown {
+      0% {
+        transform: translateY(-80px);
+        opacity: 0;
+      }
+
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .menu-btn {
+      position: absolute;
+      top: 1.2rem;
+      left: 1.5rem;
+      font-size: 1.8rem;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .menu-btn:hover {
+      transform: scale(1.2);
+    }
+
+    nav {
+      display: none;
+      flex-direction: column;
+      background: #003366;
+      position: absolute;
+      top: 5rem;
+      left: 1rem;
+      width: 220px;
+      z-index: 1000;
+      border-radius: 12px;
+      overflow: hidden;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    nav a {
+      padding: 1rem;
+      color: white;
+      text-decoration: none;
+      border-bottom: 1px solid #002244;
+      transition: background 0.3s, padding-left 0.3s;
+    }
+
+    nav a:hover {
+      background: #0059b3;
+      padding-left: 1.5rem;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 2rem auto;
+      animation: fadeIn 1s ease;
+    }
+
+    .highlight-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      animation: slideInUp 0.8s ease;
+      transition: transform 0.3s ease;
+    }
+
+    .highlight-box:hover {
+      transform: translateY(-5px);
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      box-shadow: 6px 6px 12px #cfd8dc, -6px -6px 12px #ffffff;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeIn 1s ease;
+    }
+
+    .card:hover {
+      transform: scale(1.015);
+      box-shadow: 10px 10px 20px #b0c4de;
+    }
+
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #555;
+      animation: fadeIn 2s ease-in;
+    }
+
+    .paid {
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    .pending {
+      color: #ef6c00;
+      font-weight: bold;
+    }
+
+    .timer {
+      color: #c62828;
+      font-weight: bold;
+      margin-top: 10px;
+      animation: blink 1s infinite alternate;
+    }
+
+    @keyframes blink {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0.6;
+      }
+    }
+
+    .installments {
+      margin-top: 10px;
+      padding-left: 20px;
+      animation: fadeIn 0.6s ease-in;
+    }
+
+    .installments li {
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    #userHeader {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    #headerProfilePic {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+
+    #headerUserName {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    iframe {
+      border-radius: 10px;
+      margin-top: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Ad section (optional enhancement) */
+    #adContainer .card {
+      background: linear-gradient(145deg, #fff, #e3f2fd);
+      border: 2px dashed #90caf9;
+    }
+
+    #chatOptions {
+      display: none;
+      background: #004080;
+      border-radius: 0 0 10px 10px;
+      animation: fadeIn 0.4s ease;
+    }
+
+    #chatOptions a {
+      padding: 12px 30px;
+      font-size: 0.95rem;
+      color: #fff;
+      display: block;
+      transition: background 0.3s ease;
+    }
+
+    #chatOptions a:hover {
+      background-color: #003060;
+    }
+
+    #trendCard {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      width: 58%;
+      margin-left: 21%;
+      background: linear-gradient(145deg, #e3f2fd, #ffffff);
+      border: 2px solid #64b5f6;
+      border-radius: 18px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      animation: slideInUp 0.8s ease-out;
+    }
+
+    #trendCard:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    #trendCard h3 {
+      text-align: center;
+      color: #0d47a1;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      animation: fadeIn 1s ease-in;
+    }
+
+    #trendCard canvas {
+      max-height: 140px;
+      width: 100%;
+      background-color: #ffffff;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Animations */
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+  <header>
+    <span class="menu-btn" onclick="toggleMenu()">☰</span>
+    <h1><b>💸 Akash Loan App 💸</b></h1>
+    <div id="userHeader">
+      <img id="headerProfilePic" src="" alt="User" />
+      <span id="headerUserName">User</span>
+    </div>
+    <select id="languageSelector" onchange="setLanguage(this.value)">
+      <option value="mr">मराठी</option>
+      <option value="hi">हिंदी</option>
+      <option value="en">English</option>
+    </select>
+
+  </header>
+
+  <nav id="sideMenu">
+    <a href="dashboard.html">🏠 डॅशबोर्ड</a>
+    <a href="profile.html">👤 प्रोफाईल</a>
+    <a href="kyc.html">🆔 KYC</a>
+    <a href="apply-loan.html">💵 कर्जासाठी अर्ज</a>
+    <a href="repayment.html">₹ परतफेड</a>
+    <a href="faq.html">❓ प्रश्नोत्तर</a>
+    <a href="loan-report.html">📑 तुमचा कर्ज अहवाल</a>
+
+    <div style="position: relative;">
+      <a href="#" onclick="toggleChatOptions()">💬 आमच्याशी बोला..!</a>
+      <div id="chatOptions" style="display: none; background: #004080;">
+        <a href="chatbot.html">🤖 चॅटबॉट</a>
+        <a href="contact.html">📧 ग्राहक सेवा</a>
+        <a href="#" onclick="toggleLanguageOptions()">🌐 भाषा निवडा</a>
+        <div id="languageOptions" style="display: none; background: #002c5f;">
+          <a href="#" onclick="setLanguage('mr')">मराठी</a>
+          <a href="#" onclick="setLanguage('hi')">हिंदी</a>
+          <a href="#" onclick="setLanguage('en')">English</a>
+          <a href="#" onclick="setLanguage('kn')">ಕನ್ನಡ</a>
+          <a href="#" onclick="setLanguage('gu')">ગુજરાતી</a>
+        </div>
+      </div>
+    </div>
+
+    <a href="admin-dashboard.html" id="adminNavLink" style="display:none">🛡️ अ‍ॅडमिन पॅनेल</a>
+    <a href="#" onclick="logout()">🔓 लॉगआउट</a>
+  </nav>
+
+
+  <div class="container">
+    <div class="highlight-box">
+      <h2 id="welcomeText">नमस्कार, वापरकर्ता</h2>
+      <p><strong>एकूण कर्ज मर्यादा:</strong> ₹<span id="loanLimit">0</span></p>
+    </div>
+    <div class="card" id="loanCard"></div>
+    <div class="card" id="emiCard"></div>
+    <div id="adContainer"></div>
+  </div>
+  <div class="card" id="trendCard">
+    <h3>📈 Loan Trend Analysis</h3>
+    <canvas id="trendChart" width="100%" height="200"></canvas>
+  </div>
+  <div style="text-align: center; margin-top: 10px;">
+    <button onclick="loadDemoData()"
+      style="padding: 10px 20px; border-radius: 8px; background: #1976d2; color: white; border: none; cursor: pointer; font-weight: bold; margin-right: 10px;">
+      🔍 Demo Preview
+    </button>
+    <button onclick="loadRealUserData()"
+      style="padding: 10px 20px; border-radius: 8px; background: #388e3c; color: white; border: none; cursor: pointer; font-weight: bold;">
+      🔁 Real User Data
+    </button>
+  </div>
+
+  </div>
+  <script>
+    function loadRealUserData() {
+      location.reload(); // हे सगळं default localStorage वर आधारित data पुन्हा लोड करेल
+    }
+  </script>
+
+
+  </div>
+  <script>
+    function loadDemoData() {
+      const demoUser = {
+        name: "Demo User",
+        email: "demo@akashloan.app",
+        image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+      };
+
+      const demoLoan = {
+        email: demoUser.email,
+        amount: 3000,
+        tenure: 3,
+        purpose: "Education",
+        status: "Pending",
+        appliedAt: new Date().toISOString()
+      };
+
+      const emi = calculateEMI(demoLoan.amount, demoLoan.tenure);
+      const installments = [];
+      const emiStart = new Date();
+
+      for (let i = 1; i <= demoLoan.tenure; i++) {
+        const due = new Date(emiStart);
+        due.setMonth(due.getMonth() + i);
+        installments.push({
+          email: demoUser.email,
+          label: `EMI ${i}`,
+          date: due.toDateString(),
+          amount: emi,
+          status: i === 1 ? "Paid" : "Pending"
+        });
+      }
+
+      // Do not save to localStorage – just update the screen
+      document.getElementById("headerUserName").textContent = demoUser.name;
+      document.getElementById("headerProfilePic").src = demoUser.image;
+      document.getElementById("welcomeText").textContent = `Welcome, ${demoUser.name}`;
+      document.getElementById("loanLimit").textContent = 3000;
+
+      const statusClass = demoLoan.status === 'Paid' ? 'paid' : 'pending';
+      let loanHtml = `
+      <h3>Your Loan Details</h3>
+      <p><strong>Amount:</strong> ₹${demoLoan.amount}</p>
+      <p><strong>Purpose:</strong> ${demoLoan.purpose}</p>
+      <p><strong>Tenure:</strong> ${demoLoan.tenure} months</p>
+      <p><strong>Status:</strong> <span class="${statusClass}">${demoLoan.status}</span></p>
+    `;
+
+      const dueDate = new Date();
+      dueDate.setMonth(dueDate.getMonth() + demoLoan.tenure);
+      const days = Math.floor((dueDate - new Date()) / (1000 * 60 * 60 * 24));
+      loanHtml += `<p class="timer">⏳ ${days} Days Remaining.</p>`;
+      document.getElementById("loanCard").innerHTML = loanHtml;
+
+      let emiHtml = '<h3>📅 Your EMI Schedule</h3><ul class="installments">';
+      installments.forEach(inst => {
+        const tag = inst.status === "Paid" ? '<span class="paid">[PAID]</span>' : '<span class="pending">[PENDING]</span>';
+        emiHtml += `<li><strong>${inst.label}</strong>: ${inst.date} - ₹${inst.amount} ${tag}</li>`;
+      });
+      emiHtml += '</ul>';
+      document.getElementById("emiCard").innerHTML = emiHtml;
+
+      const labels = installments.map(i => new Date(i.date).toLocaleString("default", { month: "short", year: "numeric" }));
+      let cumulative = 0;
+      const dataPoints = installments.map(i => {
+        if (i.status === "Paid") cumulative += i.amount;
+        return cumulative;
+      });
+
+      const ctx = document.getElementById("trendChart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Total EMI Paid (₹)",
+            data: dataPoints,
+            fill: true,
+            backgroundColor: "rgba(0,123,255,0.15)",
+            borderColor: "#007bff",
+            borderWidth: 2,
+            tension: 0.4,
+            pointBackgroundColor: "#007bff",
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (val) => `₹${val}`
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+
+
+  <footer>
+    &copy; 2025 Akash Loan App. All Rights Reserved.
+  </footer>
+
+  <!-- KEEP YOUR EXISTING HTML AS IS UNTIL <script> -->
+
+  <script>
+    function toggleLanguageOptions() {
+      const langMenu = document.getElementById("languageOptions");
+      langMenu.style.display = langMenu.style.display === "block" ? "none" : "block";
+    }
+
+    function setLanguage(lang) {
+      localStorage.setItem("selectedLanguage", lang);
+
+      const translations = {
+        mr: {
+          dashboard: "🏠 डॅशबोर्ड",
+          profile: "👤 प्रोफाईल",
+          kyc: "🆔 KYC",
+          applyLoan: "💵 कर्जासाठी अर्ज",
+          repayment: "₹ परतफेड",
+          faq: "❓ प्रश्नोत्तर",
+          report: "📑 तुमचा कर्ज अहवाल",
+          talk: "💬 आमच्याशी बोला..!",
+          chatbot: "🤖 चॅटबॉट",
+          contact: "📧 ग्राहक सेवा",
+          langSelect: "🌐 भाषा निवडा",
+          admin: "🛡️ अ‍ॅडमिन पॅनेल",
+          logout: "🔓 लॉगआउट",
+          welcome: "नमस्कार",
+          totalLoan: "एकूण कर्ज मर्यादा:",
+          noLoan: "📭 आपल्याकडे सध्या कोणतेही कर्ज नाही.",
+          noEmi: "🧾 EMI माहिती उपलब्ध नाही.",
+          loanDetails: "तुमचे कर्ज तपशील",
+          emiSchedule: "📅 तुमचा EMI शेड्युल"
+        },
+        hi: {
+          dashboard: "🏠 डैशबोर्ड",
+          profile: "👤 प्रोफ़ाइल",
+          kyc: "🆔 KYC",
+          applyLoan: "💵 ऋण के लिए आवेदन",
+          repayment: "₹ पुनर्भुगतान",
+          faq: "❓ प्रश्नोत्तर",
+          report: "📑 ऋण रिपोर्ट",
+          talk: "💬 हमसे बात करें..!",
+          chatbot: "🤖 चैटबॉट",
+          contact: "📧 ग्राहक सेवा",
+          langSelect: "🌐 भाषा चुनें",
+          admin: "🛡️ एडमिन पैनल",
+          logout: "🔓 लॉगआउट",
+          welcome: "नमस्ते",
+          totalLoan: "कुल ऋण सीमा:",
+          noLoan: "📭 आपके पास वर्तमान में कोई ऋण नहीं है।",
+          noEmi: "🧾 EMI जानकारी उपलब्ध नहीं है।",
+          loanDetails: "आपका ऋण विवरण",
+          emiSchedule: "📅 आपकी EMI अनुसूची"
+        },
+        en: {
+          dashboard: "🏠 Dashboard",
+          profile: "👤 Profile",
+          kyc: "🆔 KYC",
+          applyLoan: "💵 Apply for Loan",
+          repayment: "₹ Repayment",
+          faq: "❓ FAQ",
+          report: "📑 Loan Report",
+          talk: "💬 Talk to Us..!",
+          chatbot: "🤖 Chatbot",
+          contact: "📧 Customer Support",
+          langSelect: "🌐 Select Language",
+          admin: "🛡️ Admin Panel",
+          logout: "🔓 Logout",
+          welcome: "Hello",
+          totalLoan: "Total Loan Limit:",
+          noLoan: "📭 You currently have no loan.",
+          noEmi: "🧾 No EMI information available.",
+          loanDetails: "Your Loan Details",
+          emiSchedule: "📅 Your EMI Schedule"
+        }
+      };
+
+      const t = translations[lang];
+      if (!t) return;
+
+      document.querySelector('a[href="dashboard.html"]').innerText = t.dashboard;
+      document.querySelector('a[href="profile.html"]').innerText = t.profile;
+      document.querySelector('a[href="kyc.html"]').innerText = t.kyc;
+      document.querySelector('a[href="apply-loan.html"]').innerText = t.applyLoan;
+      document.querySelector('a[href="repayment.html"]').innerText = t.repayment;
+      document.querySelector('a[href="faq.html"]').innerText = t.faq;
+      document.querySelector('a[href="loan-report.html"]').innerText = t.report;
+      document.querySelector('#chatOptions a[href="chatbot.html"]').innerText = t.chatbot;
+      document.querySelector('#chatOptions a[href="contact.html"]').innerText = t.contact;
+      document.querySelector('#chatOptions a[onclick*="toggleLanguageOptions"]').innerText = t.langSelect;
+      document.querySelector('a[href="admin-dashboard.html"]').innerText = t.admin;
+      document.querySelector('a[onclick="logout()"]').innerText = t.logout;
+
+      const user = JSON.parse(localStorage.getItem("loggedInUser")) || {};
+      document.getElementById("welcomeText").innerText = `${t.welcome}, ${user.name || "User"}`;
+      document.querySelector(".highlight-box p strong").innerText = t.totalLoan;
+
+      // Optional: Translate if no loan
+      const loanCard = document.getElementById("loanCard");
+      const emiCard = document.getElementById("emiCard");
+
+      if (loanCard && loanCard.innerHTML.includes("📭")) {
+        loanCard.innerHTML = `<p>${t.noLoan}</p>`;
+      }
+
+      if (emiCard && emiCard.innerHTML.includes("🧾")) {
+        emiCard.innerHTML = `<p>${t.noEmi}</p>`;
+      }
+
+      // Optional: Translate dynamic headings if loaded
+      const loanHeading = loanCard.querySelector("h3");
+      if (loanHeading) loanHeading.innerText = t.loanDetails;
+
+      const emiHeading = emiCard.querySelector("h3");
+      if (emiHeading) emiHeading.innerText = t.emiSchedule;
+    }
+
+    // Load selected language on page load
+    window.addEventListener("load", () => {
+      const savedLang = localStorage.getItem("selectedLanguage") || "mr";
+      setLanguage(savedLang);
+      document.getElementById("languageSelector").value = savedLang;
+    });
+  </script>
+
+
+  <script>
+    function toggleLanguageOptions() {
+      const langMenu = document.getElementById("languageOptions");
+      langMenu.style.display = langMenu.style.display === "block" ? "none" : "block";
+    }
+
+
+
+  </script>
+
+  <script>
+    function toggleMenu() {
+      const sideMenu = document.getElementById("sideMenu");
+      sideMenu.style.display = sideMenu.style.display === "flex" ? "none" : "flex";
+    }
+
+    function toggleChatOptions() {
+      const chatMenu = document.getElementById("chatOptions");
+      chatMenu.style.display = chatMenu.style.display === "block" ? "none" : "block";
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "login.html";
+    }
+
+    function calculateEMI(principal, tenure, rate = 0.02) {
+      if (!principal || !tenure) return 0;
+      const r = rate;
+      const n = tenure;
+      return Math.round((principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
+    }
+
+    window.onload = () => {
+      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      const loans = JSON.parse(localStorage.getItem("loans")) || [];
+      let installments = JSON.parse(localStorage.getItem("installments")) || [];
+      const loanLimitData = JSON.parse(localStorage.getItem("loanLimitData")) || {};
+      const acceptedLimitData = JSON.parse(localStorage.getItem("loanLimitAccepted")) || {};
+
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      document.getElementById("headerUserName").textContent = user.name || "user";
+      if (user.image) {
+        document.getElementById("headerProfilePic").src = user.image;
+      }
+
+      document.getElementById("welcomeText").textContent = `Welcome, ${user.name || "user"}`;
+
+      // Handle new loan limit popup
+      let acceptedLimit = acceptedLimitData[user.email] || 500;
+      if (loanLimitData[user.email]) {
+        const newLimit = loanLimitData[user.email];
+        const alreadyAccepted = acceptedLimitData[user.email] === newLimit;
+
+        if (!alreadyAccepted) {
+          const confirmBox = confirm(`🎉 Wohoo Your Loan Limit ₹${newLimit} Incresed. Accept?`);
+          if (confirmBox) {
+            acceptedLimitData[user.email] = newLimit;
+            localStorage.setItem("loanLimitAccepted", JSON.stringify(acceptedLimitData));
+            acceptedLimit = newLimit;
+            alert("✅ New Limit Accepted.");
+          } else {
+            alert("❌ Stay With Old Limit .");
+          }
+        } else {
+          acceptedLimit = newLimit;
+        }
+      }
+      document.getElementById("loanLimit").textContent = acceptedLimit;
+
+      const userLoan = loans.find(l => l.email === user.email);
+      const loanCard = document.getElementById("loanCard");
+      const emiCard = document.getElementById("emiCard");
+
+      if (!userLoan) {
+        loanCard.innerHTML = '<p>📭 आपल्याकडे सध्या कोणतेही कर्ज नाही.</p>';
+        emiCard.innerHTML = '<p>🧾 EMI माहिती उपलब्ध नाही.</p>';
+        installments = installments.filter(i => i.email !== user.email);
+        localStorage.setItem("installments", JSON.stringify(installments));
+        return;
+      }
+
+      const statusClass = userLoan.status === 'Paid' ? 'paid' : 'pending';
+      let html = `
+      <h3>तुमचे कर्ज तपशील</h3>
+      <p><strong>AMT:</strong> ₹${userLoan.amount}</p>
+      <p><strong>Purpose:</strong> ${userLoan.purpose}</p>
+      <p><strong>Tenure:</strong> ${userLoan.tenure} months</p>
+      <p><strong>Status:</strong> <span class="${statusClass}">${userLoan.status}</span></p>
+    `;
+
+      const appliedAt = new Date(userLoan.appliedAt);
+      const dueDate = new Date(appliedAt);
+      dueDate.setMonth(dueDate.getMonth() + parseInt(userLoan.tenure));
+      const now = new Date();
+      const timeLeft = dueDate - now;
+      if (timeLeft > 0 && userLoan.status !== 'Paid') {
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        html += `<p class="timer">⏳ ${days} Days Left.</p>`;
+      }
+      loanCard.innerHTML = html;
+
+      let userInstallments = installments.filter(i => i.email === user.email);
+      if (!userInstallments.length) {
+        const emi = calculateEMI(userLoan.amount, userLoan.tenure);
+        const emiStart = new Date(userLoan.appliedAt);
+        userInstallments = [];
+
+        for (let i = 1; i <= userLoan.tenure; i++) {
+          const due = new Date(emiStart);
+          due.setMonth(due.getMonth() + i);
+          userInstallments.push({
+            email: user.email,
+            label: `EMI ${i}`,
+            date: due.toDateString(),
+            amount: emi,
+            status: "Pending"
+          });
+        }
+
+        installments = [...installments, ...userInstallments];
+        localStorage.setItem("installments", JSON.stringify(installments));
+      }
+
+      let emiHtml = '<h3>📅 Your EMI Schedule</h3><ul class="installments">';
+      userInstallments.forEach(inst => {
+        const tag = inst.status === "Paid" ? '<span class="paid">[PAID]</span>' : '<span class="pending">[PENDING]</span>';
+        emiHtml += `<li><strong>${inst.label}</strong>: ${inst.date} - ₹${inst.amount} ${tag}</li>`;
+      });
+      emiHtml += '</ul>';
+      emiCard.innerHTML = emiHtml;
+
+      if (userLoan.status !== "Paid") {
+        const allPaid = userInstallments.every(i => i.status === "Paid");
+        if (allPaid) {
+          const loanIndex = loans.findIndex(l => l.email === user.email);
+          if (loanIndex !== -1) {
+            loans[loanIndex].status = "Paid";
+            localStorage.setItem("loans", JSON.stringify(loans));
+          }
+        }
+      }
+
+      if (user.email === "akashjadhav9136@gmail.com") {
+        document.getElementById("adminNavLink").style.display = "block";
+      }
+
+      const dashboardAds = JSON.parse(localStorage.getItem("dashboardAds")) || {};
+      if (dashboardAds[user?.email]) {
+        const adBox = document.createElement("div");
+        adBox.className = "card";
+        adBox.innerHTML = `
+        <h3>📺 Sponsered Ads</h3>
+        <iframe width="100%" height="250" src="${dashboardAds[user.email]}" frameborder="0" allowfullscreen></iframe>
+      `;
+        document.getElementById("adContainer").appendChild(adBox);
+      }
+
+      // Loan Trend Analysis Chart
+      const trendCanvas = document.getElementById("trendChart");
+      if (trendCanvas && userInstallments.length > 0) {
+        let cumulative = 0;
+        const labels = [];
+        const dataPoints = [];
+
+        userInstallments.forEach(inst => {
+          const dateObj = new Date(inst.date);
+          const monthLabel = dateObj.toLocaleString("default", { month: "short", year: "numeric" });
+          labels.push(monthLabel);
+          if (inst.status === "Paid") cumulative += inst.amount;
+          dataPoints.push(cumulative);
+        });
+
+        new Chart(trendCanvas, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "Total EMI Paid (₹)",
+              data: dataPoints,
+              fill: true,
+              backgroundColor: "rgba(0,123,255,0.15)",
+              borderColor: "#007bff",
+              borderWidth: 2,
+              tension: 0.4,
+              pointBackgroundColor: "#007bff",
+              pointRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: (val) => `₹${val}`
+                }
+              }
+            }
+          }
+        });
+      }
+    };
+
+
+  </script>
+  
+
+
+</body>
+
+</html>

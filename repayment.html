@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Repayment - Akash Loan App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(120deg, #e3f2fd, #ffffff);
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 550px;
+      margin: 60px auto;
+      padding: 25px;
+      background-color: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 1s ease-in-out;
+    }
+    h2 {
+      text-align: center;
+      background: linear-gradient(45deg, #1a237e, #0d47a1);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      font-size: 24px;
+      letter-spacing: 1px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin: 15px 0 5px;
+      color: #1a237e;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+      margin-bottom: 5px;
+    }
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(to right, #0069d9, #004aad);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: linear-gradient(to right, #004aad, #002c71);
+    }
+    .info, .qr-note {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+      text-align: center;
+    }
+    .gateway-box {
+      margin-top: 30px;
+      text-align: center;
+      border-top: 1px solid #ddd;
+      padding-top: 25px;
+    }
+    .qr-img {
+      margin-top: 10px;
+      width: 200px;
+      height: auto;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      transition: transform 0.3s ease;
+    }
+    .qr-img:hover {
+      transform: scale(1.05);
+    }
+    .captcha-box {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .captcha-box input {
+      width: 65%;
+    }
+    .captcha-code {
+      background: #e1e1e1;
+      padding: 10px 15px;
+      font-weight: bold;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 16px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>💸 Loan Repayment</h2>
+    <form onsubmit="makePayment(event)">
+      <label for="loan-id">Loan ID (Email)</label>
+      <input type="text" id="loan-id" placeholder="Enter your email (Loan ID)" required />
+
+      <label for="emi-option">Select EMI</label>
+      <select id="emi-option" onchange="fillAmount()">
+        <option value="">--Select EMI--</option>
+      </select>
+
+      <label for="amount">Repayment Amount (₹)</label>
+      <input type="number" id="amount" placeholder="Eg. 3000" required />
+
+      <div class="captcha-box">
+        <input type="text" id="captchaInput" placeholder="Enter Captcha" required />
+        <div class="captcha-code" id="captchaCode">A7B9X</div>
+      </div>
+
+      <button type="submit">✅ Pay via Razorpay</button>
+    </form>
+
+    <div class="gateway-box">
+      <h3>OR Scan & Pay via PhonePe</h3>
+      <img class="qr-img" src="WhatsApp Image 2025-07-19 at 16.34.00_e90d1bdf.jpg" alt="PhonePe QR Code" />
+      <div class="qr-note"><br />UPI Accepted via PhonePe</div>
+    </div>
+
+    <div class="info">
+      Ensure your email is correct. Payments are non-refundable.
+    </div>
+  </div>
+
+  <script>
+    const captcha = "A7B9X";
+
+    function calculateEMI(principal, tenure, rate = 0.02) {
+      if (!principal || !tenure) return 0;
+      const r = rate;
+      const n = tenure;
+      return Math.round((principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
+    }
+
+    function fillEMIOptions(loan) {
+      const emiDropdown = document.getElementById("emi-option");
+      emiDropdown.innerHTML = `<option value="">--Select EMI--</option>`;
+      for (let i = 1; i <= loan.tenure; i++) {
+        emiDropdown.innerHTML += `<option value="emi${i}">EMI ${i}</option>`;
+      }
+      emiDropdown.innerHTML += `<option value="full">Full Loan Paid</option>`;
+    }
+
+    function fillAmount() {
+      const email = document.getElementById("loan-id").value.trim();
+      const emiOption = document.getElementById("emi-option").value;
+      const amountInput = document.getElementById("amount");
+
+      if (!email) {
+        alert("Please enter email first.");
+        return;
+      }
+
+      const loans = JSON.parse(localStorage.getItem("loans")) || [];
+      const loan = loans.find(l => l.email === email);
+
+      if (!loan) {
+        alert("Loan not found.");
+        return;
+      }
+
+      const emi = calculateEMI(loan.amount, loan.tenure);
+
+      if (emiOption.startsWith("emi")) {
+        amountInput.value = emi;
+      } else if (emiOption === "full") {
+        amountInput.value = loan.amount;
+      } else {
+        amountInput.value = "";
+      }
+    }
+
+    document.getElementById("loan-id").addEventListener("blur", () => {
+      const email = document.getElementById("loan-id").value.trim();
+      const loans = JSON.parse(localStorage.getItem("loans")) || [];
+      const loan = loans.find(l => l.email === email);
+      if (loan) {
+        fillEMIOptions(loan);
+      }
+    });
+
+    function makePayment(event) {
+      event.preventDefault();
+
+      const loanId = document.getElementById("loan-id").value.trim();
+      const amount = parseFloat(document.getElementById("amount").value.trim());
+      const enteredCaptcha = document.getElementById("captchaInput").value.trim().toUpperCase();
+      const selectedEMI = document.getElementById("emi-option").value;
+
+      if (!loanId || isNaN(amount) || amount <= 0) {
+        alert("❌ Please enter valid details.");
+        return;
+      }
+
+      if (enteredCaptcha !== captcha) {
+        alert("⚠️ Incorrect captcha!");
+        return;
+      }
+
+      let loans = JSON.parse(localStorage.getItem("loans")) || [];
+      const loanIndex = loans.findIndex(loan => loan.email === loanId);
+
+      if (loanIndex === -1) {
+        alert("❌ No loan found for this email.");
+        return;
+      }
+
+      const userLoan = loans[loanIndex];
+
+      if (userLoan.status === "Rejected") {
+        alert("⛔ This loan has been rejected. Repayment is not applicable.");
+        return;
+      }
+
+      if (userLoan.status === "Pending") {
+        alert("⏳ This loan is still pending. You can repay only approved loans.");
+        return;
+      }
+
+      const repayment = {
+        email: loanId,
+        amount,
+        date: new Date().toISOString(),
+        type: selectedEMI
+      };
+
+      const repayments = JSON.parse(localStorage.getItem("repayments")) || [];
+      repayments.push(repayment);
+      localStorage.setItem("repayments", JSON.stringify(repayments));
+
+      if (selectedEMI.startsWith("emi")) {
+        let installments = JSON.parse(localStorage.getItem("installments")) || [];
+        const emiLabel = selectedEMI.toUpperCase().replace("EMI", "EMI ");
+        const existing = installments.find(inst =>
+          inst.email === loanId && inst.label === emiLabel
+        );
+
+        if (existing) {
+          existing.status = "Paid";
+        } else {
+          installments.push({
+            email: loanId,
+            label: emiLabel,
+            status: "Paid"
+          });
+        }
+
+        localStorage.setItem("installments", JSON.stringify(installments));
+      }
+
+      if (selectedEMI === "full") {
+        loans[loanIndex].status = "Paid";
+        localStorage.setItem("loans", JSON.stringify(loans));
+      }
+
+      alert(`✅ ₹${amount} repayment for ${loanId} was successful.` + (selectedEMI === "full" ? "\nLoan status set to PAID." : ""));
+
+      document.getElementById("loan-id").value = "";
+      document.getElementById("amount").value = "";
+      document.getElementById("captchaInput").value = "";
+      document.getElementById("emi-option").innerHTML = `<option value="">--Select EMI--</option>`;
+    }
+  </script>
+</body>
+</html>

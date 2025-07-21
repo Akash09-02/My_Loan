@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Loan Report - Akash Loan App</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background-color: #fff;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #003366;
+      color: white;
+    }
+
+    button {
+      margin: 2px;
+      padding: 6px 10px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .approve {
+      background-color: green;
+      color: white;
+    }
+
+    .reject {
+      background-color: red;
+      color: white;
+    }
+
+    .block {
+      background-color: #555;
+      color: white;
+    }
+
+    .remove {
+      background-color: #c00;
+      color: white;
+    }
+
+    .download-btn {
+      display: block;
+      margin: 0 auto 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Loan Report</h1>
+  <button class="download-btn" onclick="downloadPDF()">Download PDF</button>
+
+  <table id="loanTable">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Loan Details</th>
+        <th>Profile Info</th>
+        <th>KYC Details</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="appsTbody"></tbody>
+  </table>
+
+  <script>
+    const loans = JSON.parse(localStorage.getItem("loans")) || [];
+
+    function calculateEMI(amount, months, rate = 10) {
+      let monthlyRate = rate / 12 / 100;
+      return ((amount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months))).toFixed(2);
+    }
+
+    function renderLoans() {
+      const appsTbody = document.getElementById("appsTbody");
+      appsTbody.innerHTML = '';
+
+      loans.forEach((loan, index) => {
+        const emi = calculateEMI(loan.amount || 0, loan.tenure || 12);
+
+        const actions = loan.status === 'Approved' ? 'Approved' :
+                        loan.status === 'Rejected' ? 'Rejected' :
+                        `<button onclick="approveLoan(${index})">Approve Loan</button>
+                         <button onclick="rejectLoan('${loan.email}')">Reject Loan</button>`;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${loan.email}</td>
+          <td>
+            ₹${loan.amount || 0}<br/>
+            Purpose: ${loan.purpose || 'N/A'}<br/>
+            Tenure: ${loan.tenure} months<br/>
+            <strong>EMI: ₹${emi}</strong>
+          </td>
+          <td>
+            Name: ${loan.profile?.name || 'N/A'}<br/>
+            Phone: ${loan.profile?.phone || 'N/A'}<br/>
+            Address: ${loan.profile?.address || 'N/A'}<br/>
+            <button class="approve" onclick="approveProfile(${index})">Approve</button>
+            <button class="reject" onclick="rejectProfile(${index})">Reject</button>
+          </td>
+          <td>
+            Aadhar: ${loan.kyc?.aadhar || 'N/A'}<br/>
+            PAN: ${loan.kyc?.pan || 'N/A'}<br/>
+            Income: ₹${loan.kyc?.income || 'N/A'}<br/>
+            Occupation: ${loan.kyc?.occupation || 'N/A'}<br/>
+            <button class="approve" onclick="approveKYC(${index})">Approve</button>
+            <button class="reject" onclick="rejectKYC(${index})">Reject</button>
+          </td>
+          <td>
+            <strong>${loan.status || 'Pending'}</strong><br/>
+            ${loan.status === 'Rejected' && loan.rejectionReason ? `<span style="color:red;">Reason: ${loan.rejectionReason}</span>` : ''}
+            <br/>${actions}
+          </td>
+          <td>
+            <button class="block" onclick="blockUser('${loan.email}')">Block</button><br/>
+            <button class="remove" onclick="removeUser('${loan.email}')">Remove</button>
+          </td>
+        `;
+        appsTbody.appendChild(row);
+      });
+    }
+
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(18);
+      doc.text("Loan Report", 105, 20, null, null, "center");
+
+      const table = document.getElementById("loanTable");
+      const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent);
+      const rows = Array.from(table.querySelectorAll("tbody tr")).map(tr =>
+        Array.from(tr.querySelectorAll("td")).map(td => td.textContent.replace(/\n/g, ' '))
+      );
+
+      doc.autoTable({
+        startY: 30,
+        head: [headers],
+        body: rows,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 51, 102] },
+        margin: { left: 14, right: 14 },
+      });
+
+      const finalY = doc.previousAutoTable.finalY + 20;
+      doc.setFontSize(12);
+      doc.setTextColor(60);
+      doc.text("Hopes you enjoy Akash Loan App services and borrowing money with us.", 14, finalY);
+
+      doc.save("Loan_Report.pdf");
+    }
+
+    // Dummy functions
+    function approveLoan(index) { alert("Loan Approved: " + index); }
+    function rejectLoan(email) { alert("Loan Rejected for: " + email); }
+    function approveProfile(index) { alert("Profile Approved: " + index); }
+    function rejectProfile(index) { alert("Profile Rejected: " + index); }
+    function approveKYC(index) { alert("KYC Approved: " + index); }
+    function rejectKYC(index) { alert("KYC Rejected: " + index); }
+    function blockUser(email) { alert("User Blocked: " + email); }
+    function removeUser(email) { alert("User Removed: " + email); }
+
+    renderLoans();
+  </script>
+</body>
+</html>

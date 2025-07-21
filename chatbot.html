@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Loan Chatbot - Akash Loan App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #e0ecff, #f4f7ff);
+      padding: 30px 15px;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .chatbot-container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+      animation: fadeIn 1s ease;
+    }
+
+    h2 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 15px;
+      font-size: 1.6rem;
+    }
+
+    .chat-window {
+      height: 420px;
+      overflow-y: auto;
+      padding: 15px;
+      border-radius: 15px;
+      background: #f9fbfe;
+      border: 1px solid #dce3f0;
+      box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.05);
+      animation: fadeIn 0.8s ease;
+    }
+
+    .msg {
+      margin: 10px 0;
+      display: flex;
+    }
+
+    .msg.user {
+      justify-content: flex-end;
+      animation: slideInRight 0.3s ease;
+    }
+
+    .msg.bot {
+      justify-content: flex-start;
+      animation: slideInLeft 0.3s ease;
+    }
+
+    .msg span {
+      max-width: 70%;
+      padding: 12px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .msg.user span {
+      background: #007bff;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg.bot span {
+      background: #ebeff5;
+      color: #333;
+      border-bottom-left-radius: 4px;
+    }
+
+    .input-area {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 10px 22px;
+      background: linear-gradient(to right, #004e92, #000428);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #003060, #001830);
+      transform: translateY(-2px);
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .chat-window {
+        height: 350px;
+      }
+
+      input,
+      button {
+        font-size: 13px;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+
+    .suggestion-link {
+      color: #121619;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .suggestion-link:hover {
+      color: #201171;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="chatbot-container">
+    <h2>💬 Loan Chatbot</h2>
+    <div class="chat-window" id="chatWindow">
+      <div class="msg bot"><span>Hello 👋! Ask me anything about your loan limit, tenure, status, or due date.</span>
+      </div>
+    </div>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Type your question here..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chatWindow = document.getElementById("chatWindow");
+
+    function appendMessage(sender, text) {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = `msg ${sender}`;
+      msgDiv.innerHTML = `<span>${text}</span>`;
+      chatWindow.appendChild(msgDiv);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function getAnswer(message) {
+      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      const loans = JSON.parse(localStorage.getItem("loans")) || [];
+      const limits = JSON.parse(localStorage.getItem("loanLimitData")) || {};
+
+      const loan = loans.find(l => l.email === user?.email);
+      const limit = limits[user?.email] || 0;
+
+      if (!user) return "❌ You are not logged in.";
+      if (!loan) return "🔍 No active loan found.";
+
+      const appliedAt = new Date(loan.appliedAt);
+      const tenureMonths = parseInt(loan.tenure);
+      const now = new Date();
+      const emiIntervalDays = 30;
+
+      const nextEmiDate = new Date(appliedAt.getTime());
+      while (nextEmiDate < now) {
+        nextEmiDate.setDate(nextEmiDate.getDate() + emiIntervalDays);
+      }
+
+      const previousEmiDate = new Date(nextEmiDate.getTime() - emiIntervalDays);
+
+      const daysLeft = (() => {
+        const dueDate = new Date(appliedAt);
+        dueDate.setMonth(dueDate.getMonth() + tenureMonths);
+        const timeLeft = dueDate - now;
+        return Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+      })();
+
+      message = message.toLowerCase();
+
+      if (message.includes("loan limit") || message.includes("borrow limit")) {
+        return `💰 Your loan limit is ₹${limit}.`;
+      } else if (message.includes("loan id") || message.includes("email")) {
+        return `🆔 Your Loan ID is your email: ${user.email}`;
+      } else if (message.includes("tenure")) {
+        return `📆 Your loan tenure is ${loan.tenure} months.`;
+      } else if (message.includes("days left") || message.includes("due date")) {
+        return loan.status === "Paid"
+          ? "✅ Your loan is already paid."
+          : `⏳ You have ${daysLeft} days left until the due date.`;
+      } else if (message.includes("status")) {
+        return `📋 Your loan status is: ${loan.status}`;
+      } else if (message.includes("next emi")) {
+        return `📅 Your next EMI is due on: ${nextEmiDate.toDateString()}`;
+      } else if (message.includes("previous emi")) {
+        return `📆 Your previous EMI was paid on: ${previousEmiDate.toDateString()}`;
+      } else if (message.includes("hello")) {
+        return "👋 Hello! How can I help you today?";
+      } else if (message.includes("customer care") || message.includes("contact")) {
+        return `📞 You can contact customer care here: <a href="contact.html" target="_blank">support@akashloan.com</a>`;
+      }
+
+     else if (message.includes("how much time") && message.includes("loan")) {
+      return "⏱️ Loan amount is usually deposited within 24-48 hours after final approval.";
+    } else {
+      const suggestions = [
+        "What is my loan limit?",
+        "What is my loan ID?",
+        "What is my loan tenure?",
+        "How many days left for repayment?",
+        "What is my loan status?",
+        "What’s my next EMI date?",
+        "What is my previous EMI paid date?",
+        "Hello",
+        "I want a link that redirects me to customer care",
+        "How much time is required for loan deposit?"
+      ];
+
+      const suggestionHTML = suggestions.map(s =>
+        `<li><a href="#" class="suggestion-link" onclick="fillAndSend('${s.replace(/'/g, "\\'")}')">${s}</a></li>`
+      ).join("");
+
+      return `🤖 Sorry, I didn’t understand that.<br><br>💡 You can ask me questions like:<ul>${suggestionHTML}</ul>`;
+    }
+    }
+
+    function fillAndSend(text) {
+      const input = document.getElementById("userInput");
+      input.value = text;
+      sendMessage(); // directly send
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("userInput");
+      const message = input.value.trim();
+      if (message === "") return;
+
+      appendMessage("user", message);
+
+      setTimeout(() => {
+        const reply = getAnswer(message);
+        appendMessage("bot", reply);
+      }, 500);
+
+      input.value = "";
+    }
+  </script>
+
+</body>
+
+</html>

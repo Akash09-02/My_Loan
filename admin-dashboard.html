@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel - Akash Loan App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f6ff;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2,
+    h3 {
+      text-align: center;
+      color: #1a237e;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+
+    thead {
+      background-color: #1a237e;
+      color: white;
+    }
+
+    th,
+    td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      margin: 2px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background-color 0.3s ease;
+    }
+
+    .approve {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .approve:hover {
+      background-color: #218838;
+    }
+
+    .reject {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .reject:hover {
+      background-color: #c82333;
+    }
+
+    .paid {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .paid:hover {
+      background-color: #0056b3;
+    }
+
+    .block {
+      background-color: #ff9800;
+      color: white;
+    }
+
+    .block:hover {
+      background-color: #f57c00;
+    }
+
+    .remove {
+      background-color: #9c27b0;
+      color: white;
+    }
+
+    .remove:hover {
+      background-color: #7b1fa2;
+    }
+
+    .verify {
+      background-color: #00bcd4;
+      color: white;
+    }
+
+    .verify:hover {
+      background-color: #0097a7;
+    }
+
+    .ad-section {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      margin: 20px auto;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0 12px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .ads-list {
+      margin-top: 20px;
+    }
+
+    .ad-item {
+      background: #e3f2fd;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .ad-item span {
+      display: inline-block;
+      width: 70%;
+    }
+
+    .delete-ad {
+      background-color: #e53935;
+      color: white;
+    }
+
+    .delete-ad:hover {
+      background-color: #c62828;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Admin Dashboard - All Loan Applications</h2>
+  <div style="text-align: right; margin-bottom: 15px;">
+    <button onclick="window.location.href='admin-report.html'"
+      style="padding: 10px 20px; font-size: 14px; background-color: #1a237e; color: white; border: none; border-radius: 6px; cursor: pointer;">
+      📊 View Report
+    </button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>User Email</th>
+        <th>Loan Details</th>
+        <th>Profile</th>
+        <th>KYC</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="applications"></tbody>
+  </table>
+
+  <!-- 🎯 Ad Section -->
+  <div class="ad-section">
+    <h3>Add Ad to User Dashboard</h3>
+    <input type="text" id="adLink" placeholder="Enter YouTube/Video Link" />
+    <input type="email" id="adEmail" placeholder="Enter Target User Email" />
+    <button onclick="addAd()" class="approve">Submit Ad</button>
+    <div class="ads-list" id="adsList"></div>
+  </div>
+
+  <!-- 💸 Loan Limit Section -->
+  <div class="ad-section">
+    <h3>Set New Loan Limit for User</h3>
+    <input type="email" id="limitEmail" placeholder="Enter User Email" />
+    <input type="number" id="limitAmount" placeholder="Enter New Loan Limit (₹)" />
+    <button onclick="setLoanLimit()" class="block">Set Limit</button>
+  </div>
+
+  <script>
+    const appsTbody = document.getElementById("applications");
+
+    function calculateEMI(principal, tenure, rate = 0.02) {
+      if (!principal || !tenure) return 0;
+      const r = rate;
+      const n = tenure;
+      return Math.round((principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
+    }
+
+    function renderLoans() {
+      let loans = JSON.parse(localStorage.getItem("loans")) || [];
+      let installments = JSON.parse(localStorage.getItem("installments")) || [];
+
+      loans = loans.filter(loan => loan && loan.email && loan.email !== "undefined");
+
+      loans.forEach((loan, i) => {
+        if (!loan.emi) {
+          loan.emi = calculateEMI(loan.amount, loan.tenure);
+        }
+
+        const userInstallments = installments.filter(inst => inst.email === loan.email && inst.loanId === loan.createdAt);
+        const allPaid = userInstallments.length > 0 && userInstallments.every(inst => inst.status === 'Paid');
+        if (allPaid && loan.status !== 'Paid') {
+          loan.status = 'Paid';
+          loans[i].status = 'Paid';
+        }
+      });
+
+      localStorage.setItem("loans", JSON.stringify(loans));
+      appsTbody.innerHTML = '';
+
+      loans.forEach((loan, index) => {
+        const emi = loan.emi;
+        const userInstallments = installments.filter(inst => inst.email === loan.email && inst.loanId === loan.createdAt);
+
+        let actions = '';
+        if (loan.status !== 'Paid') {
+          actions += `
+            <button class="approve" onclick="updateStatus(${index}, 'Approved')">Approve</button>
+            <button class="reject" onclick="updateStatus(${index}, 'Rejected')">Reject</button>
+            <button class="paid" onclick="updateStatus(${index}, 'Paid')">Mark Paid</button>
+          `;
+          const pendingEmi = userInstallments.find(inst => inst.status === 'Pending');
+          if (pendingEmi) {
+            actions += `<br><button class="verify" onclick="verifyEMI('${loan.email}', '${pendingEmi.label}', '${loan.createdAt}')">Verify EMI</button>`;
+          }
+        } else {
+          actions = `
+            <span style="color: green;">✔️ Paid</span><br/>
+            <button class="remove" onclick="dropAndUpdateLimit('${loan.email}', ${index})">Drop & Update Limit</button>
+          `;
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${loan.email}</td>
+          <td>
+            ₹${loan.amount || 0}<br/>
+            Purpose: ${loan.purpose || 'N/A'}<br/>
+            Tenure: ${loan.tenure} months<br/>
+            <strong>EMI: ₹${emi}</strong>
+          </td>
+          <td>
+            Name: ${loan.profile?.name || 'N/A'}<br/>
+            Phone: ${loan.profile?.phone || 'N/A'}<br/>
+            Address: ${loan.profile?.address || 'N/A'}<br/>
+            <button class="approve" onclick="approveProfile(${index})">Approve</button>
+            <button class="reject" onclick="rejectProfile(${index})">Reject</button>
+          </td>
+          <td>
+            Aadhar: ${loan.kyc?.aadhar || 'N/A'}<br/>
+            PAN: ${loan.kyc?.pan || 'N/A'}<br/>
+            Income: ₹${loan.kyc?.income || 'N/A'}<br/>
+            Occupation: ${loan.kyc?.occupation || 'N/A'}<br/>
+            <button class="approve" onclick="approveKYC(${index})">Approve</button>
+            <button class="reject" onclick="rejectKYC(${index})">Reject</button>
+          </td>
+          <td><strong>${loan.status || 'Pending'}</strong><br/>${actions}</td>
+          <td>
+            <button class="block" onclick="blockUser('${loan.email}')">Block</button><br/>
+            <button class="remove" onclick="removeUser('${loan.email}')">Remove</button>
+          </td>
+        `;
+        appsTbody.appendChild(row);
+      });
+    }
+
+    function setLoanLimit() {
+      const email = document.getElementById("limitEmail").value.trim();
+      const amount = parseInt(document.getElementById("limitAmount").value.trim());
+
+      if (!email || !amount || isNaN(amount) || amount <= 0) {
+        alert("❌ Valid email आणि amount भरावे.");
+        return;
+      }
+
+      const limits = JSON.parse(localStorage.getItem("loanLimitData")) || {};
+      limits[email] = amount;
+      localStorage.setItem("loanLimitData", JSON.stringify(limits));
+      alert(`✅ ${email} साठी नवीन कर्ज मर्यादा ₹${amount} सेट केली गेली.`);
+      document.getElementById("limitEmail").value = '';
+      document.getElementById("limitAmount").value = '';
+    }
+
+    function verifyEMI(email, emiLabel, loanId) {
+      let installments = JSON.parse(localStorage.getItem("installments")) || [];
+      installments = installments.map(inst => {
+        if (inst.email === email && inst.label === emiLabel && inst.loanId === loanId) {
+          inst.status = "Paid";
+        }
+        return inst;
+      });
+      localStorage.setItem("installments", JSON.stringify(installments));
+      alert(`✅ ${emiLabel} verified as paid for ${email}`);
+      renderLoans();
+    }
+
+    function updateStatus(index, status) {
+      const loans = JSON.parse(localStorage.getItem("loans")) || [];
+      loans[index].status = status;
+      localStorage.setItem("loans", JSON.stringify(loans));
+      alert(`Loan marked as ${status}`);
+      renderLoans();
+    }
+
+    function dropAndUpdateLimit(email, index) {
+      const newLimit = prompt(`Enter new borrow limit for ${email} (₹):`);
+      if (!newLimit || isNaN(newLimit) || Number(newLimit) <= 0) return alert("Invalid amount!");
+      let limits = JSON.parse(localStorage.getItem("loanLimitData")) || {};
+      limits[email] = Number(newLimit);
+      localStorage.setItem("loanLimitData", JSON.stringify(limits));
+      let loans = JSON.parse(localStorage.getItem("loans")) || [];
+      loans.splice(index, 1);
+      localStorage.setItem("loans", JSON.stringify(loans));
+      alert(`Limit updated and loan dropped for ${email}`);
+      renderLoans();
+    }
+
+    function approveKYC(index) {
+      let kycData = JSON.parse(localStorage.getItem("kycData")) || [];
+      const loans = JSON.parse(localStorage.getItem("loans")) || [];
+
+      const email = loans[index].email;
+      const kycIndex = kycData.findIndex(k => k.email === email);
+      if (kycIndex >= 0) {
+        kycData[kycIndex].approved = true;
+        localStorage.setItem("kycData", JSON.stringify(kycData));
+        alert(`✅ KYC approved for ${email}`);
+      } else {
+        alert(`❌ KYC not found for ${email}`);
+      }
+    }
+
+    function rejectKYC(index) { alert('KYC Rejected'); }
+    function approveProfile(index) { alert('Profile Approved'); }
+    function rejectProfile(index) { alert('Profile Rejected'); }
+
+    function blockUser(email) {
+      if (!email || email === "undefined") return;
+      const blocked = JSON.parse(localStorage.getItem("blockedUsers")) || [];
+      if (!blocked.includes(email)) {
+        blocked.push(email);
+        localStorage.setItem("blockedUsers", JSON.stringify(blocked));
+        alert(`${email} has been blocked.`);
+      }
+    }
+
+    function removeUser(email) {
+      if (!email || email === "undefined") return;
+      let users = JSON.parse(localStorage.getItem("users")) || [];
+      users = users.filter(user => user.email !== email);
+      localStorage.setItem("users", JSON.stringify(users));
+      let loans = JSON.parse(localStorage.getItem("loans")) || [];
+      loans = loans.filter(loan => loan.email !== email);
+      localStorage.setItem("loans", JSON.stringify(loans));
+      alert(`${email} and their data removed.`);
+      renderLoans();
+    }
+
+    function addAd() {
+      let link = document.getElementById("adLink").value.trim();
+      const email = document.getElementById("adEmail").value.trim();
+      if (!link || !email) return alert("Please enter both ad link and email.");
+      const youtubeMatch = link.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (youtubeMatch) {
+        link = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+      }
+      const ads = JSON.parse(localStorage.getItem("dashboardAds")) || {};
+      ads[email] = link;
+      localStorage.setItem("dashboardAds", JSON.stringify(ads));
+      alert(`Ad added for ${email}`);
+      renderAds();
+      document.getElementById("adLink").value = '';
+      document.getElementById("adEmail").value = '';
+    }
+
+    function renderAds() {
+      const ads = JSON.parse(localStorage.getItem("dashboardAds")) || {};
+      const adsList = document.getElementById("adsList");
+      adsList.innerHTML = "";
+      Object.entries(ads).forEach(([email, link]) => {
+        const div = document.createElement("div");
+        div.className = "ad-item";
+        div.innerHTML = `<span><strong>${email}</strong>: ${link}</span>
+        <button class="delete-ad" onclick="removeAd('${email}')">Remove</button>`;
+        adsList.appendChild(div);
+      });
+    }
+
+    function removeAd(email) {
+      const ads = JSON.parse(localStorage.getItem("dashboardAds")) || {};
+      delete ads[email];
+      localStorage.setItem("dashboardAds", JSON.stringify(ads));
+      alert(`Ad removed for ${email}`);
+      renderAds();
+    }
+
+    renderLoans();
+    renderAds();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Enter Rejection Reason</title>
+</head>
+<body>
+  <h2>Enter Rejection Reason</h2>
+  <p id="emailDisplay"></p>
+  <textarea id="reason" placeholder="Enter reason..." rows="4" cols="50"></textarea><br><br>
+  <button onclick="submitReason()">Submit</button>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get("email");
+
+    document.getElementById("emailDisplay").textContent = `Rejecting loan for: ${email}`;
+
+    function submitReason() {
+      const reason = document.getElementById("reason").value.trim();
+      if (!reason) {
+        alert("Please enter a reason.");
+        return;
+      }
+
+      let loans = JSON.parse(localStorage.getItem("loans")) || [];
+      loans = loans.map(loan => {
+        if (loan.email === email) {
+          loan.status = "Rejected";
+          loan.rejectionReason = reason;
+        }
+        return loan;
+      });
+
+      localStorage.setItem("loans", JSON.stringify(loans));
+      alert("Reason saved successfully!");
+      window.location.href = "admin-dashboard.html"; // Redirect back to admin dashboard
+    }
+    
+  </script>
+</body>
+</html>

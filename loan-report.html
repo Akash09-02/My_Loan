@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Loan Report</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fb;
+      margin: 0;
+      padding: 30px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #003366;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .download-btn {
+      display: block;
+      margin: 20px auto 0;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Your Loan Report</h1>
+    <table id="loanTable">
+      <thead>
+        <tr>
+          <th>Loan ID</th>
+          <th>Amount</th>
+          <th>Purpose</th>
+          <th>Status</th>
+          <th>Reason</th>
+          <th>Tenure</th>
+          <th>Applied Date</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button class="download-btn" onclick="downloadPDF()">📥 Download as PDF</button>
+  </div>
+
+  <script>
+    window.onload = function () {
+      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      const loans = JSON.parse(localStorage.getItem("loans")) || [];
+      const tbody = document.querySelector("#loanTable tbody");
+      const userLoans = loans.filter(l => l.email === user.email);
+
+      if (userLoans.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7">You have no loan history available.</td></tr>`;
+        return;
+      }
+
+      userLoans.forEach((loan, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>₹${loan.amount}</td>
+          <td>${loan.purpose}</td>
+          <td>${loan.status}</td>
+          <td>${loan.status === 'Rejected' ? loan.rejectionReason || 'N/A' : '-'}</td>
+          <td>${loan.tenure} months</td>
+          <td>${new Date(loan.appliedAt).toLocaleDateString()}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    };
+
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(18);
+      doc.text("Your Loan Report", 105, 20, null, null, "center");
+
+      const table = document.getElementById("loanTable");
+      const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent);
+      const rows = Array.from(table.querySelectorAll("tbody tr")).map(tr =>
+        Array.from(tr.querySelectorAll("td")).map(td => td.textContent)
+      );
+
+      doc.autoTable({
+        startY: 30,
+        head: [headers],
+        body: rows,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 51, 102] },
+        margin: { left: 14, right: 14 },
+      });
+
+      const finalY = doc.previousAutoTable.finalY + 20;
+      doc.setFontSize(12);
+      doc.setTextColor(60);
+      doc.text("Hopes you enjoy Akash Loan App services and borrowing money with us.", 14, finalY);
+
+      doc.save("Your_Loan_Report.pdf");
+    }
+  </script>
+</body>
+</html>
